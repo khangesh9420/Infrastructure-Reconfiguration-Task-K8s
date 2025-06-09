@@ -1,5 +1,5 @@
 pipeline {
-  agent { label 'k8s agent' }
+  agent { label 'k8s-agent' }
   environment {
     REGISTRY = "khangeshmatte123"
     BUILD_ID = "${env.BUILD_ID}"
