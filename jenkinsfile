@@ -1,0 +1,43 @@
+pipeline {
+  agent { label 'k8s agent' }
+  environment {
+    REGISTRY = "khangeshmatte123"
+    BUILD_ID = "${env.BUILD_ID}"
+    DOCKER_CREDENTIALS_ID = "docker-hub-credentials"
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Docker Login') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: "$DOCKER_CREDENTIALS_ID", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+        }
+      }
+    }
+    stage('Build Images') {
+      steps {
+        sh 'docker build -t $REGISTRY/book-service:$BUILD_ID book-service'
+        sh 'docker build -t $REGISTRY/user-service:$BUILD_ID user-service'
+      }
+    }
+    stage('Push Images') {
+      steps {
+        sh 'docker push $REGISTRY/book-service:$BUILD_ID'
+        sh 'docker push $REGISTRY/user-service:$BUILD_ID'
+      }
+    }
+    stage('Deploy to K8s') {
+      steps {
+        sh 'kubectl set image deployment/book-service book-service=$REGISTRY/book-service:$BUILD_ID'
+        sh 'kubectl set image deployment/user-service user-service=$REGISTRY/user-service:$BUILD_ID'
+        sh 'kubectl apply -f k8s/book-service.yaml'
+        sh 'kubectl apply -f k8s/user-service.yaml'
+        sh 'kubectl apply -f k8s/ingress.yaml'
+      }
+    }
+  }
+}
