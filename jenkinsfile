@@ -10,32 +10,42 @@ pipeline {
         checkout scm
       }
     }
-    stage('Docker Login') {
+
+    stage('Login to Docker Hub (Buildah)') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+          sh 'buildah login -u $DOCKER_USER -p $DOCKER_PASS docker.io'
         }
       }
     }
-    stage('Build Images') {
+
+    stage('Build Images with Buildah') {
       steps {
-        sh 'docker build -t $REGISTRY/book-service:$BUILD_ID book-service'
-        sh 'docker build -t $REGISTRY/user-service:$BUILD_ID user-service'
+        sh '''
+          buildah bud -t docker.io/$REGISTRY/book-service:$BUILD_ID book-service
+          buildah bud -t docker.io/$REGISTRY/user-service:$BUILD_ID user-service
+        '''
       }
     }
-    stage('Push Images') {
+
+    stage('Push Images with Buildah') {
       steps {
-        sh 'docker push $REGISTRY/book-service:$BUILD_ID'
-        sh 'docker push $REGISTRY/user-service:$BUILD_ID'
+        sh '''
+          buildah push docker.io/$REGISTRY/book-service:$BUILD_ID
+          buildah push docker.io/$REGISTRY/user-service:$BUILD_ID
+        '''
       }
     }
-    stage('Deploy to K8s') {
+
+    stage('Deploy to Kubernetes') {
       steps {
-        sh 'kubectl set image deployment/book-service book-service=$REGISTRY/book-service:$BUILD_ID'
-        sh 'kubectl set image deployment/user-service user-service=$REGISTRY/user-service:$BUILD_ID'
-        sh 'kubectl apply -f k8s/book-service.yaml'
-        sh 'kubectl apply -f k8s/user-service.yaml'
-        sh 'kubectl apply -f k8s/ingress.yaml'
+        sh '''
+          kubectl set image deployment/book-service book-service=docker.io/$REGISTRY/book-service:$BUILD_ID
+          kubectl set image deployment/user-service user-service=docker.io/$REGISTRY/user-service:$BUILD_ID
+          kubectl apply -f k8s/book-service.yaml
+          kubectl apply -f k8s/user-service.yaml
+          kubectl apply -f k8s/ingress.yaml
+        '''
       }
     }
   }
