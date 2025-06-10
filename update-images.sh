@@ -7,8 +7,8 @@ set -e
 REGISTRY="khangeshmatte123"
 TAG="$BUILD_ID"
 
-BOOK_FILE="k8s_manifest/book-service.yaml"
-USER_FILE="k8s_manifest/user-service.yaml"
+BOOK_FILE="k8s_manifest/book-deployment.yaml"
+USER_FILE="k8s_manifest/user-deployment.yaml"
 
 echo "Updating image tags in manifests to tag: $TAG"
 
