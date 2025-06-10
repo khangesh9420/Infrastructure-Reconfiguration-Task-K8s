@@ -27,14 +27,15 @@
     </form>
     <ul id="book-list"></ul>
   </div>
-
   <script>
-    function showApp() {
-      document.getElementById('app').style.display = 'block';
-    }
+  function showApp() {
+    document.getElementById('app').style.display = 'block';
+  }
 
-    async function loadUsers() {
-      const res = await fetch('https://microservices.local/users');
+  async function loadUsers() {
+    try {
+      const res = await fetch('/users');
+      if (!res.ok) throw new Error('Failed to fetch users');
       const users = await res.json();
       const list = document.getElementById('user-list');
       list.innerHTML = '';
@@ -43,10 +44,15 @@
         li.textContent = `ID: ${u.id} - Name: ${u.name}`;
         list.appendChild(li);
       });
+    } catch (err) {
+      alert('Error loading users: ' + err.message);
     }
+  }
 
-    async function loadBooks() {
-      const res = await fetch('https://microservices.local/books');
+  async function loadBooks() {
+    try {
+      const res = await fetch('/books');
+      if (!res.ok) throw new Error('Failed to fetch books');
       const books = await res.json();
       const list = document.getElementById('book-list');
       list.innerHTML = '';
@@ -55,34 +61,47 @@
         li.textContent = `"${b.title}" by ${b.author} (User ID: ${b.user_id})`;
         list.appendChild(li);
       });
+    } catch (err) {
+      alert('Error loading books: ' + err.message);
     }
+  }
 
-    document.getElementById('user-form').onsubmit = async (e) => {
-      e.preventDefault();
-      const id = parseInt(document.getElementById('user-id').value);
-      const name = document.getElementById('user-name').value;
-      await fetch('https://microservices.local/users', {
+  document.getElementById('user-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const id = parseInt(document.getElementById('user-id').value);
+    const name = document.getElementById('user-name').value;
+    try {
+      const res = await fetch('/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, name })
       });
-      loadUsers();
-    };
+      if (!res.ok) throw new Error('Failed to add user');
+      await loadUsers();
+    } catch (err) {
+      alert('Error adding user: ' + err.message);
+    }
+  };
 
-    document.getElementById('book-form').onsubmit = async (e) => {
-      e.preventDefault();
-      const title = document.getElementById('book-title').value;
-      const author = document.getElementById('book-author').value;
-      const user_id = parseInt(document.getElementById('book-user-id').value);
-      await fetch('https://microservices.local/books', {
+  document.getElementById('book-form').onsubmit = async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('book-title').value;
+    const author = document.getElementById('book-author').value;
+    const user_id = parseInt(document.getElementById('book-user-id').value);
+    try {
+      const res = await fetch('/books', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, author, user_id })
       });
-      loadBooks();
-    };
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to add book');
+      }
+      await loadBooks();
+    } catch (err) {
+      alert('Error adding book: ' + err.message);
+    }
+  };
+</script>
 
-    // Load data only after clicking the button
-  </script>
-</body>
-</html>
