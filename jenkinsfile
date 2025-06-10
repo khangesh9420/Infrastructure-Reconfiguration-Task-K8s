@@ -38,6 +38,9 @@ pipeline {
     }
     
     stage('Update Manifests & Push to Git') {
+      environment {
+        COMMIT_BRANCH = "${env.BRANCH_NAME ?: 'main'}"
+        }
       steps {
         sh '''
           chmod +x update-images.sh
@@ -55,7 +58,7 @@ pipeline {
     
            git add .
            git commit -m "ci: update image tags to $BUILD_ID"
-           git push origin "$CURRENT_BRANCH"
+           git push origin "$COMMIT_BRANCH"
         '''
       }
     }
