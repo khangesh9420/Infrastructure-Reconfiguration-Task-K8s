@@ -36,30 +36,40 @@ pipeline {
         '''
       }
     }
-    
+
     stage('Update Manifests & Push to Git') {
       environment {
-        COMMIT_BRANCH = "${env.BRANCH_NAME ?: 'main'}"
-        }
+        GIT_REPO_NAME = "Infrastructure-Reconfiguration-Task-K8s"
+        GIT_USER_NAME = "khangesh9420"
+      }
       steps {
-        sh '''
-          chmod +x update-images.sh
-          ./update-images.sh
-           git config --global user.name "khangesh9420"
-           git config --global user.email "khangeshmatte@gmail.com"
-    
-           # Get the current branch from Jenkins env or fallback
-           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-           if [ -z "$CURRENT_BRANCH" ] || [ "$CURRENT_BRANCH" = "HEAD" ]; then
-             CURRENT_BRANCH="main"  # fallback branch name
-           fi
-    
-           echo "On branch: $CURRENT_BRANCH"
-    
-           git add .
-           git commit -m "ci: update image tags to $BUILD_ID"
-           git push origin "$COMMIT_BRANCH"
-        '''
+        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+          sh '''
+            chmod +x update-images.sh
+            ./update-images.sh
+
+            git config --global user.name "khangesh9420"
+            git config --global user.email "khangeshmatte@gmail.com"
+
+            # Determine current branch or fallback
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+            if [ "$CURRENT_BRANCH" = "HEAD" ] || [ -z "$CURRENT_BRANCH" ]; then
+              CURRENT_BRANCH="main"
+              git checkout $CURRENT_BRANCH
+            fi
+
+            echo "On branch: $CURRENT_BRANCH"
+
+            git add k8s_manifest/book-service.yaml k8s_manifest/user-service.yaml
+
+            if ! git diff --cached --quiet; then
+              git commit -m "ci: update image tags to $BUILD_ID"
+              git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git $CURRENT_BRANCH
+            else
+              echo "No changes to commit"
+            fi
+          '''
+        }
       }
     }
   }
