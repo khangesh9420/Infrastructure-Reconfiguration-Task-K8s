@@ -26,7 +26,12 @@ git config --global user.email "khangeshmatte@gmail.com"
 git fetch origin
 
 # Determine the default branch dynamically (main, master, etc.)
-echo "On branch: $CURRENT_BRANCH"
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+if [ -z "$CURRENT_BRANCH" ] || [ "$CURRENT_BRANCH" == "HEAD" ]; then
+  CURRENT_BRANCH="main"  # or whatever your real default branch is
+fi
+
 git checkout "$CURRENT_BRANCH"
 
 # Stage, commit, and push changes
