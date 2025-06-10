@@ -17,28 +17,3 @@ sed -i "s|docker.io/$REGISTRY/book-service:[^\"']*|docker.io/$REGISTRY/book-serv
 sed -i "s|docker.io/$REGISTRY/user-service:[^\"']*|docker.io/$REGISTRY/user-service:$TAG|" "$USER_FILE"
 
 echo "Image tags updated successfully."
-
-# Set Git user identity (only needed in CI)
-git config --global user.name "khangesh9420"
-git config --global user.email "khangeshmatte@gmail.com"
-
-# Fetch branch info (necessary if clone was shallow or detached)
-git fetch origin
-
-# Determine the default branch dynamically (main, master, etc.)
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
-
-if [ -z "$CURRENT_BRANCH" ] || [ "$CURRENT_BRANCH" == "HEAD" ]; then
-  CURRENT_BRANCH="main"  # or whatever your real default branch is
-fi
-
-git checkout "$CURRENT_BRANCH"
-
-# Stage, commit, and push changes
-git add .
-git commit -m "ci: update image tags to $TAG"
-
-echo "Pushing to origin $DEFAULT_BRANCH"
-git push origin HEAD
-
-echo "✅ Image tag update script completed successfully."
