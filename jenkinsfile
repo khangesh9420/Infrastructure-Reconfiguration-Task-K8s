@@ -36,15 +36,12 @@ pipeline {
         '''
       }
     }
-
-    stage('Deploy to Kubernetes') {
+    
+    stage('Update Manifests & Push to Git') {
       steps {
         sh '''
-          kubectl set image deployment/book-service book-service=docker.io/$REGISTRY/book-service:$BUILD_ID
-          kubectl set image deployment/user-service user-service=docker.io/$REGISTRY/user-service:$BUILD_ID
-          kubectl apply -f k8s_manifest/book-service.yaml
-          kubectl apply -f k8s_manifest/user-service.yaml
-          kubectl apply -f k8s_manifest/ingress.yaml
+          chmod +x update-images.sh
+          ./update-images.sh
         '''
       }
     }
