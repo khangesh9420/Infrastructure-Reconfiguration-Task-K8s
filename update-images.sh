@@ -30,7 +30,7 @@ echo "On branch: $CURRENT_BRANCH"
 git checkout "$CURRENT_BRANCH"
 
 # Stage, commit, and push changes
-git add "$BOOK_FILE" "$USER_FILE"
+git add .
 git commit -m "ci: update image tags to $TAG"
 
 echo "Pushing to origin $DEFAULT_BRANCH"
