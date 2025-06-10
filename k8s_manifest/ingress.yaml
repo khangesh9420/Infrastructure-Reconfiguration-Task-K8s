@@ -6,18 +6,18 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
-  - host: localhost
+  - host: microservices.local
     http:
       paths:
-      - path: /books(/|$)(.*)
-        pathType: Prefix
+      - path: /books
+        pathType: ImplementationSpecific
         backend:
           service:
             name: book-service
             port:
               number: 80
-      - path: /users(/|$)(.*)
-        pathType: Prefix
+      - path: /users
+        pathType: ImplementationSpecific
         backend:
           service:
             name: user-service
