@@ -13,8 +13,8 @@ sed -i "s|docker.io/$REGISTRY/book-service:[^\"']*|docker.io/$REGISTRY/book-serv
 sed -i "s|docker.io/$REGISTRY/user-service:[^\"']*|docker.io/$REGISTRY/user-service:$TAG|" "$USER_FILE"
 
 # Git commit & push
-git config --global user.name "Jenkins"
-git config --global user.email "jenkins@example.com"
+git config --global user.name "khangesh9420"
+git config --global user.email "khangeshmatte@gmail.com"
 
 git add "$BOOK_FILE" "$USER_FILE"
 git commit -m "ci: update image tags to $TAG"
