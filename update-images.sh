@@ -26,9 +26,8 @@ git config --global user.email "khangeshmatte@gmail.com"
 git fetch origin
 
 # Determine the default branch dynamically (main, master, etc.)
-DEFAULT_BRANCH=$(git remote show origin | grep 'HEAD branch' | awk '{print $NF}')
-echo "Checking out branch: $DEFAULT_BRANCH"
-git checkout "$DEFAULT_BRANCH"
+echo "On branch: $CURRENT_BRANCH"
+git checkout "$CURRENT_BRANCH"
 
 # Stage, commit, and push changes
 git add "$BOOK_FILE" "$USER_FILE"
