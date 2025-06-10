@@ -1,8 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 import requests
 
 app = Flask(__name__)
 books = []
+
+@app.route('/')
+def index():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/books', methods=['GET'])
 def get_books():
@@ -12,11 +16,11 @@ def get_books():
 def add_book():
     data = request.json
     user_id = data.get('user_id')
-    
-    # Validate user via user-service
+
+    # Validate user exists in user-service
     try:
-        resp = requests.get(f'http://user-service.default.svc.cluster.local:5001/users/{user_id}')
-        if resp.status_code != 200:
+        response = requests.get(f'http://user-service.default.svc.cluster.local:5001/users/{user_id}')
+        if response.status_code != 200:
             return jsonify({'error': 'User not found'}), 404
     except requests.exceptions.RequestException:
         return jsonify({'error': 'User service unreachable'}), 503
