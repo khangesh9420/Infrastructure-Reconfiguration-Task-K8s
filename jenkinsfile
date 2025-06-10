@@ -31,7 +31,7 @@ pipeline {
     stage('Push Images with Buildah') {
       steps {
         sh '''
-          buildah push docker.io/$REGISTRY/book-service:$BUILD_ID
+          buildah push docker.io/$REGIk8s_manifestSTRY/book-service:$BUILD_ID
           buildah push docker.io/$REGISTRY/user-service:$BUILD_ID
         '''
       }
@@ -42,9 +42,9 @@ pipeline {
         sh '''
           kubectl set image deployment/book-service book-service=docker.io/$REGISTRY/book-service:$BUILD_ID
           kubectl set image deployment/user-service user-service=docker.io/$REGISTRY/user-service:$BUILD_ID
-          kubectl apply -f k8s/book-service.yaml
-          kubectl apply -f k8s/user-service.yaml
-          kubectl apply -f k8s/ingress.yaml
+          kubectl apply -f k8s_manifest/book-service.yaml
+          kubectl apply -f k8s_manifest/user-service.yaml
+          kubectl apply -f k8s_manifest/ingress.yaml
         '''
       }
     }
