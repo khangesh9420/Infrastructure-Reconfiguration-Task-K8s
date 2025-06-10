@@ -3,6 +3,7 @@ kind: Ingress
 metadata:
   name: micro-ingress
 spec:
+  ingressClassName: nginx
   rules:
   - host: microservices.local
     http:
