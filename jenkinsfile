@@ -31,7 +31,7 @@ pipeline {
     stage('Push Images with Buildah') {
       steps {
         sh '''
-          buildah push docker.io/$REGIk8s_manifestSTRY/book-service:$BUILD_ID
+          buildah push docker.io/$REGISTRY/book-service:$BUILD_ID
           buildah push docker.io/$REGISTRY/user-service:$BUILD_ID
         '''
       }
