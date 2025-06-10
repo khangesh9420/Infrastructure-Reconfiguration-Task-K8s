@@ -60,7 +60,7 @@ pipeline {
 
             echo "On branch: $CURRENT_BRANCH"
 
-            git add k8s_manifest/book-service.yaml k8s_manifest/user-service.yaml
+            git add k8s_manifest/book-deployment.yaml k8s_manifest/user-deployment.yaml
 
             if ! git diff --cached --quiet; then
               git commit -m "ci: update image tags to $BUILD_ID"
