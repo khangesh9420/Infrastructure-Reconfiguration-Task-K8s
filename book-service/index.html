@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Microservices App</title>
+</head>
+<body>
+  <h1>Users</h1>
+  <form id="user-form">
+    Name: <input type="text" id="user-name" required />
+    ID: <input type="number" id="user-id" required />
+    <button type="submit">Add User</button>
+  </form>
+  <ul id="user-list"></ul>
+
+  <h1>Books</h1>
+  <form id="book-form">
+    Title: <input type="text" id="book-title" required />
+    Author: <input type="text" id="book-author" required />
+    User ID: <input type="number" id="book-user-id" required />
+    <button type="submit">Add Book</button>
+  </form>
+  <ul id="book-list"></ul>
+
+  <script>
+    async function loadUsers() {
+      const res = await fetch('/users');
+      const users = await res.json();
+      const list = document.getElementById('user-list');
+      list.innerHTML = '';
+      users.forEach(u => {
+        const li = document.createElement('li');
+        li.textContent = `ID: ${u.id} - Name: ${u.name}`;
+        list.appendChild(li);
+      });
+    }
+
+    async function loadBooks() {
+      const res = await fetch('/books');
+      const books = await res.json();
+      const list = document.getElementById('book-list');
+      list.innerHTML = '';
+      books.forEach(b => {
+        const li = document.createElement('li');
+        li.textContent = `"${b.title}" by ${b.author} (User ID: ${b.user_id})`;
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('user-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const id = parseInt(document.getElementById('user-id').value);
+      const name = document.getElementById('user-name').value;
+      await fetch('/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, name })
+      });
+      loadUsers();
+    };
+
+    document.getElementById('book-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const title = document.getElementById('book-title').value;
+      const author = document.getElementById('book-author').value;
+      const user_id = parseInt(document.getElementById('book-user-id').value);
+      await fetch('/books', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, author, user_id })
+      });
+      loadBooks();
+    };
+
+    loadUsers();
+    loadBooks();
+  </script>
+</body>
+</html>
