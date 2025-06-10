@@ -42,6 +42,20 @@ pipeline {
         sh '''
           chmod +x update-images.sh
           ./update-images.sh
+           git config --global user.name "khangesh9420"
+           git config --global user.email "khangeshmatte@gmail.com"
+    
+           # Get the current branch from Jenkins env or fallback
+           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+           if [ -z "$CURRENT_BRANCH" ] || [ "$CURRENT_BRANCH" = "HEAD" ]; then
+             CURRENT_BRANCH="main"  # fallback branch name
+           fi
+    
+           echo "On branch: $CURRENT_BRANCH"
+    
+           git add .
+           git commit -m "ci: update image tags to $BUILD_ID"
+           git push origin "$CURRENT_BRANCH"
         '''
       }
     }
