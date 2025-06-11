@@ -30,7 +30,7 @@ pipeline {
       }
     }
 
-    // NEW: SonarQube Static Code Analysis
+    
     stage('Test') {
       environment {
         SONAR_HOST_URL = 'http://sonarqube.local'  // Update to match your ingress URL
@@ -39,21 +39,19 @@ pipeline {
         withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
           sh '''
             echo 'Running static code analysis using SonarQube with Buildah'
-            
+        
             # Use Buildah to pull the image and create a container
             buildah from --pull --name sonar-scanner docker.io/sonarsource/sonar-scanner-cli
             
-            # Mount the container to interact with its filesystem
+            # Use buildah unshare to gain privileges for mounting
             buildah unshare bash -c "
               # Mount the container to interact with its filesystem
-              buildah mount sonar-scanner
-            
-            # Copy the source code into the container's workspace
-            buildah run sonar-scanner -- rm -rf /usr/src/app
-            buildah run sonar-scanner -- cp -r /home/jenkins/agent/workspace/Book-user-app /usr/src/app
-            
-            # Run SonarQube analysis inside the container
-            buildah run sonar-scanner -- bash -c "
+              container_mount_path=\$(buildah mount sonar-scanner)
+    
+              # Ensure the directory is correct and copy the workspace files
+              cp -r /home/jenkins/agent/workspace/Book-user-app \$container_mount_path/usr/src/app
+    
+              # Run SonarQube analysis inside the container
               sonar-scanner \
                 -Dsonar.projectKey=flask_app \
                 -Dsonar.sources=. \
