@@ -44,7 +44,9 @@ pipeline {
             buildah from --pull --name sonar-scanner docker.io/sonarsource/sonar-scanner-cli
             
             # Mount the container to interact with its filesystem
-            buildah mount sonar-scanner
+            buildah unshare bash -c "
+              # Mount the container to interact with its filesystem
+              buildah mount sonar-scanner
             
             # Copy the source code into the container's workspace
             buildah run sonar-scanner -- rm -rf /usr/src/app
