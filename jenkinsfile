@@ -32,7 +32,7 @@ pipeline {
 
     stage('Test') {
       environment {
-        SONAR_HOST_URL = 'http://sonarqube.local'  // Update to match your ingress URL
+        SONAR_HOST_URL = 'http://sonarqube.local'  // Update to match your ingress URL or IP address
       }
       steps {
         withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
@@ -50,7 +50,7 @@ pipeline {
               
               # Verify the mount path
               echo 'Container mounted at: \$container_mount_path'
-
+              
               # Ensure the directory exists in the container and has proper permissions
               mkdir -p \$container_mount_path/usr/src/app
               chown -R jenkins:jenkins \$container_mount_path/usr/src/app
@@ -64,6 +64,9 @@ pipeline {
               
               # Set the SonarQube scanner user home directory to a writable location
               export SONAR_USER_HOME=/home/jenkins/.sonar
+
+              # Try resolving sonarqube.local - replace this with actual IP if needed
+              ping -c 3 sonarqube.local || echo 'Unable to reach sonarqube.local'
 
               # Run SonarQube analysis inside the container
               echo 'Running SonarQube analysis...'
