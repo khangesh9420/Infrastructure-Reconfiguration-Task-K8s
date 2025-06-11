@@ -41,7 +41,7 @@ pipeline {
             echo 'Running static code analysis using SonarQube with Buildah'
             
             # Use Buildah to pull the image and create a container
-            buildah from --pull --name sonar-scanner sonarsource/sonar-scanner-cli
+            buildah from --pull --name sonar-scanner docker.io/sonarsource/sonar-scanner-cli
             
             # Mount the container to interact with its filesystem
             buildah mount sonar-scanner
