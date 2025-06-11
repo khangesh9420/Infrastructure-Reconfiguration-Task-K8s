@@ -1,11 +1,11 @@
 pipeline {
   agent { label 'k8s-agent' }
-  
+
   environment {
     REGISTRY = "khangeshmatte123"
     BUILD_ID = "${env.BUILD_ID}"
   }
-  
+
   stages {
     stage('Checkout') {
       steps {
@@ -30,53 +30,37 @@ pipeline {
       }
     }
 
-    stage('Test') {
+    stage('SonarQube Scan: book-service') {
       environment {
-        SONAR_HOST_URL = 'http://sonarqube.local'  // Update to match your ingress URL or IP address
+        SONAR_HOST_URL = 'http://108.142.232.37:9000' // updated to your VM's public IP
       }
       steps {
-        withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-          sh '''
-            echo 'Running static code analysis using SonarQube with Buildah'
-            
-            # Create the container and mount its filesystem (don't pull the image again)
-            container_name=sonar-scanner-container
-            buildah from --name $container_name docker.io/sonarsource/sonar-scanner-cli
-            
-            # Use buildah unshare to gain privileges for mounting
-            buildah unshare bash -c "
-              # Mount the container to interact with its filesystem
-              container_mount_path=\$(buildah mount $container_name)
-              
-              # Verify the mount path
-              echo 'Container mounted at: \$container_mount_path'
-              
-              # Ensure the directory exists in the container and has proper permissions
-              mkdir -p \$container_mount_path/usr/src/app
-              chown -R jenkins:jenkins \$container_mount_path/usr/src/app
-              
-              # Copy the workspace files into the container
-              echo 'Copying workspace files to the container mount path'
-              cp -r /home/jenkins/agent/workspace/book-service \$container_mount_path/usr/src/app
-              
-              # Verify files have been copied
-              ls -al \$container_mount_path/usr/src/app
-              
-              # Set the SonarQube scanner user home directory to a writable location
-              export SONAR_USER_HOME=/home/jenkins/.sonar
+        dir('book-service') {
+          withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+            sh '''
+              echo "Running SonarQube analysis for book-service"
 
-              # Try resolving sonarqube.local - replace this with actual IP if needed
-              ping -c 3 sonarqube.local || echo 'Unable to reach sonarqube.local'
+              buildah from --name sonar-cli docker.io/sonarsource/sonar-scanner-cli
 
-              # Run SonarQube analysis inside the container
-              echo 'Running SonarQube analysis...'
-              sonar-scanner \
-                -Dsonar.projectKey=book-service \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=$SONAR_HOST_URL \
-                -Dsonar.login=$SONAR_TOKEN
-            "
-          '''
+              buildah unshare bash -c '
+                mount_path=$(buildah mount sonar-cli)
+
+                # Copy project source to container mount
+                cp -r . $mount_path/usr/src
+
+                # Create SonarQube config inside mount
+                echo "sonar.projectKey=book-service" > $mount_path/usr/src/sonar-project.properties
+                echo "sonar.sources=." >> $mount_path/usr/src/sonar-project.properties
+                echo "sonar.host.url=$SONAR_HOST_URL" >> $mount_path/usr/src/sonar-project.properties
+                echo "sonar.login=$SONAR_TOKEN" >> $mount_path/usr/src/sonar-project.properties
+
+                # Run scanner inside container
+                buildah run sonar-cli sonar-scanner -Dproject.settings=/usr/src/sonar-project.properties
+              '
+
+              buildah rm sonar-cli
+            '''
+          }
         }
       }
     }
@@ -101,10 +85,9 @@ pipeline {
             chmod +x update-images.sh
             ./update-images.sh
 
-            git config --global user.name "khangesh9420"
+            git config --global user.name "$GIT_USER_NAME"
             git config --global user.email "khangeshmatte@gmail.com"
 
-            # Determine current branch or fallback
             CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
             if [ "$CURRENT_BRANCH" = "HEAD" ] || [ -z "$CURRENT_BRANCH" ]; then
               CURRENT_BRANCH="main"
