@@ -1,9 +1,11 @@
 pipeline {
   agent { label 'k8s-agent' }
+  
   environment {
     REGISTRY = "khangeshmatte123"
     BUILD_ID = "${env.BUILD_ID}"
   }
+  
   stages {
     stage('Checkout') {
       steps {
@@ -25,6 +27,28 @@ pipeline {
           buildah bud -t docker.io/$REGISTRY/book-service:$BUILD_ID book-service
           buildah bud -t docker.io/$REGISTRY/user-service:$BUILD_ID user-service
         '''
+      }
+    }
+
+    // NEW: SonarQube Static Code Analysis
+    stage('Test') {
+      environment {
+        SONAR_HOST_URL = 'http://sonarqube.local'  // Update to match your ingress URL
+      }
+      steps {
+        withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+          sh '''
+            echo 'Running static code analysis using SonarQube'
+            docker run --rm \
+              -v $WORKSPACE:/usr/src/app \
+              -w /usr/src/app \
+              sonarsource/sonar-scanner-cli \
+              -Dsonar.projectKey=flask_app \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=$SONAR_HOST_URL \
+              -Dsonar.login=$SONAR_TOKEN
+          '''
+        }
       }
     }
 
