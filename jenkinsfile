@@ -30,7 +30,6 @@ pipeline {
       }
     }
 
-    
     stage('Test') {
       environment {
         SONAR_HOST_URL = 'http://sonarqube.local'  // Update to match your ingress URL
@@ -39,28 +38,37 @@ pipeline {
         withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
           sh '''
             echo 'Running static code analysis using SonarQube with Buildah'
-            # Use Buildah to pull the image and create a container
-            buildah from --pull --name sonar-scanner docker.io/sonarsource/sonar-scanner-cli
-          
+            
+            # Create the container and mount its filesystem (don't pull the image again)
+            container_name=sonar-scanner-container
+            buildah from --name $container_name docker.io/sonarsource/sonar-scanner-cli
+            
             # Use buildah unshare to gain privileges for mounting
             buildah unshare bash -c "
               # Mount the container to interact with its filesystem
-              container_mount_path=\$(buildah mount sonar-scanner)
-          
+              container_mount_path=\$(buildah mount $container_name)
+              
               # Verify the mount path
               echo 'Container mounted at: \$container_mount_path'
-          
-              # Ensure the workspace directory exists and copy the files into the container
+
+              # Ensure the directory exists in the container and has proper permissions
+              mkdir -p \$container_mount_path/usr/src/app
+              chown -R jenkins:jenkins \$container_mount_path/usr/src/app
+              
+              # Copy the workspace files into the container
               echo 'Copying workspace files to the container mount path'
-              cp -r /home/jenkins/agent/workspace/Book-user-app \$container_mount_path/usr/src/app
-          
-              # Verify files have been copied (optional debug step)
+              cp -r /home/jenkins/agent/workspace/book-service \$container_mount_path/usr/src/app
+              
+              # Verify files have been copied
               ls -al \$container_mount_path/usr/src/app
-          
+              
+              # Set the SonarQube scanner user home directory to a writable location
+              export SONAR_USER_HOME=/home/jenkins/.sonar
+
               # Run SonarQube analysis inside the container
               echo 'Running SonarQube analysis...'
               sonar-scanner \
-                -Dsonar.projectKey=flask_app \
+                -Dsonar.projectKey=book-service \
                 -Dsonar.sources=. \
                 -Dsonar.host.url=$SONAR_HOST_URL \
                 -Dsonar.login=$SONAR_TOKEN
