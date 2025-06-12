@@ -4,28 +4,39 @@ pipeline {
   environment {
     REGISTRY = "khangeshmatte123"
     BUILD_ID = "${env.BUILD_ID}"
+    SONAR_HOST_URL = 'http://108.142.232.37:9000'
   }
 
   stages {
-    stage('Check Relevant Changes') {
-      steps {
-        script {
-          def changes = sh(script: "git diff --name-only origin/main", returnStdout: true).trim().split('\n')
-          def matched = changes.any { file ->
-            file == 'Jenkinsfile' || file.startsWith('book-service/') || file.startsWith('user-service/')
-          }
-          if (!matched) {
-            echo "No relevant changes. Skipping build."
-            currentBuild.result = 'NOT_BUILT'
-            error("Build skipped.")
-          }
-        }
-      }
-    }
-
     stage('Checkout') {
       steps {
         checkout scm
+      }
+    }
+
+    stage('Check Relevant Changes') {
+      steps {
+        script {
+          def changes = []
+          try {
+            changes = sh(script: "git diff --name-only HEAD~1 HEAD", returnStdout: true).trim().split('\n')
+          } catch (err) {
+            echo "Diff failed or first commit – running pipeline anyway."
+            changes = ['Jenkinsfile']
+          }
+
+          def shouldBuild = changes.any { file ->
+            file == 'Jenkinsfile' || file.startsWith('book-service/') || file.startsWith('user-service/')
+          }
+
+          if (!shouldBuild) {
+            echo "No relevant changes. Skipping build."
+            currentBuild.result = 'NOT_BUILT'
+            error("Build skipped.")
+          } else {
+            echo "Relevant changes detected: ${changes}"
+          }
+        }
       }
     }
 
@@ -47,23 +58,24 @@ pipeline {
     }
 
     stage('SonarQube Scan') {
-      environment {
-        SONAR_HOST_URL = 'http://108.142.232.37:9000'
-      }
       steps {
         withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
           sh '''
+            echo "Running SonarQube analysis"
+
             buildah from --name sonar-cli docker.io/sonarsource/sonar-scanner-cli
 
             buildah unshare bash -c '
               mount_path=$(buildah mount sonar-cli)
               cp -r . $mount_path/usr/src
+
               cat <<EOF > $mount_path/usr/src/sonar-project.properties
 sonar.projectKey=infrastructure-repo
-sonar.sources=.
+sonar.sources=book-service,user-service
 sonar.host.url=$SONAR_HOST_URL
 sonar.login=$SONAR_TOKEN
 EOF
+
               buildah run sonar-cli sonar-scanner -Dproject.settings=/usr/src/sonar-project.properties
             '
 
@@ -107,6 +119,8 @@ EOF
             if ! git diff --cached --quiet; then
               git commit -m "ci: update image tags to $BUILD_ID"
               git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git $CURRENT_BRANCH
+            else
+              echo "No changes to commit"
             fi
           '''
         }
