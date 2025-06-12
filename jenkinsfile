@@ -4,18 +4,9 @@ pipeline {
   environment {
     REGISTRY = "khangeshmatte123"
     BUILD_ID = "${env.BUILD_ID}"
-    REPO_NAME = "${env.REPO_NAME ?: 'unknown-repo'}"
-    PUSHED_BY = "${env.PUSHED_BY ?: 'unknown-user'}"
   }
 
   stages {
-    stage('Log Webhook Info') {
-      steps {
-        echo "Triggered by: ${PUSHED_BY}"
-        echo "Repository: ${REPO_NAME}"
-      }
-    }
-
     stage('Checkout') {
       steps {
         checkout scm
@@ -41,7 +32,7 @@ pipeline {
 
     stage('SonarQube Scan: book-service') {
       environment {
-        SONAR_HOST_URL = 'http://108.142.232.37:9000'
+        SONAR_HOST_URL = 'http://108.142.232.37:9000' // updated to your VM's public IP
       }
       steps {
         dir('book-service') {
@@ -54,13 +45,16 @@ pipeline {
               buildah unshare bash -c '
                 mount_path=$(buildah mount sonar-cli)
 
+                # Copy project source to container mount
                 cp -r . $mount_path/usr/src
 
+                # Create SonarQube config inside mount
                 echo "sonar.projectKey=book-service" > $mount_path/usr/src/sonar-project.properties
                 echo "sonar.sources=." >> $mount_path/usr/src/sonar-project.properties
                 echo "sonar.host.url=$SONAR_HOST_URL" >> $mount_path/usr/src/sonar-project.properties
                 echo "sonar.login=$SONAR_TOKEN" >> $mount_path/usr/src/sonar-project.properties
 
+                # Run scanner inside container
                 buildah run sonar-cli sonar-scanner -Dproject.settings=/usr/src/sonar-project.properties
               '
 
@@ -116,5 +110,3 @@ pipeline {
     }
   }
 }
-
-
