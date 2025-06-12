@@ -22,11 +22,11 @@ pipeline {
             changes = sh(script: "git diff --name-only HEAD~1 HEAD", returnStdout: true).trim().split('\n')
           } catch (err) {
             echo "Diff failed or first commit – running pipeline anyway."
-            changes = ['Jenkinsfile']
+            changes = ['jenkinsfile']
           }
 
           def shouldBuild = changes.any { file ->
-            file == 'Jenkinsfile' || file.startsWith('book-service/') || file.startsWith('user-service/')
+            file == 'jenkinsfile' || file.startsWith('book-service/') || file.startsWith('user-service/')
           }
 
           if (!shouldBuild) {
