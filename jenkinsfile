@@ -19,11 +19,10 @@ pipeline {
     stage('Detect Changes') {
       steps {
         script {
-          def changedFiles = sh(script: "git diff --name-only origin/main", returnStdout: true).trim()
-          env.CHANGED_BOOK = changedFiles.contains("book-service/")
-          env.CHANGED_USER = changedFiles.contains("user-service/")
-          echo "Book service changed: ${env.CHANGED_BOOK}"
-          echo "User service changed: ${env.CHANGED_USER}"
+           def changedFiles = sh(script: "git diff --name-only HEAD~1", returnStdout: true).trim()
+           echo "Changed files:\n${changedFiles}"
+           env.CHANGED_BOOK = changedFiles.contains("book-service/")
+           env.CHANGED_USER = changedFiles.contains("user-service/")
         }
       }
     }
