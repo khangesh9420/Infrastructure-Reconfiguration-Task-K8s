@@ -1,107 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Welcome to Microservices App</title>
+  <title>Welcome to DevOps World</title>
 </head>
 <body>
-  <h1>📚 Welcome to the Microservices App</h1>
-  <p>This page connects users and books through microservices.</p>
-  <button onclick="showApp()">Go to Book Manager</button>
+  <h1> Welcome to DevOps World</h1>
+  <p>Register below to join our DevOps course!</p>
 
-  <div id="app" style="display:none;">
-    <hr/>
-    <h2>Users</h2>
-    <form id="user-form">
-      Name: <input type="text" id="user-name" required />
-      ID: <input type="number" id="user-id" required />
-      <button type="submit">Add User</button>
-    </form>
-    <ul id="user-list"></ul>
+  <form id="register-form">
+    <label for="name">Your Name:</label>
+    <input type="text" id="name" required />
+    <button type="submit">Register</button>
+  </form>
 
-    <h2>Books</h2>
-    <form id="book-form">
-      Title: <input type="text" id="book-title" required />
-      Author: <input type="text" id="book-author" required />
-      User ID: <input type="number" id="book-user-id" required />
-      <button type="submit">Add Book</button>
-    </form>
-    <ul id="book-list"></ul>
-  </div>
+  <h2>📋 Registered Users</h2>
+  <ul id="registrants-list"></ul>
+
   <script>
-  function showApp() {
-    document.getElementById('app').style.display = 'block';
-  }
-
-  async function loadUsers() {
-    try {
-      const res = await fetch('/users');
-      if (!res.ok) throw new Error('Failed to fetch users');
-      const users = await res.json();
-      const list = document.getElementById('user-list');
-      list.innerHTML = '';
-      users.forEach(u => {
-        const li = document.createElement('li');
-        li.textContent = `ID: ${u.id} - Name: ${u.name}`;
-        list.appendChild(li);
-      });
-    } catch (err) {
-      alert('Error loading users: ' + err.message);
-    }
-  }
-
-  async function loadBooks() {
-    try {
-      const res = await fetch('/books');
-      if (!res.ok) throw new Error('Failed to fetch books');
-      const books = await res.json();
-      const list = document.getElementById('book-list');
-      list.innerHTML = '';
-      books.forEach(b => {
-        const li = document.createElement('li');
-        li.textContent = `"${b.title}" by ${b.author} (User ID: ${b.user_id})`;
-        list.appendChild(li);
-      });
-    } catch (err) {
-      alert('Error loading books: ' + err.message);
-    }
-  }
-
-  document.getElementById('user-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const id = parseInt(document.getElementById('user-id').value);
-    const name = document.getElementById('user-name').value;
-    try {
-      const res = await fetch('/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, name })
-      });
-      if (!res.ok) throw new Error('Failed to add user');
-      await loadUsers();
-    } catch (err) {
-      alert('Error adding user: ' + err.message);
-    }
-  };
-
-  document.getElementById('book-form').onsubmit = async (e) => {
-    e.preventDefault();
-    const title = document.getElementById('book-title').value;
-    const author = document.getElementById('book-author').value;
-    const user_id = parseInt(document.getElementById('book-user-id').value);
-    try {
-      const res = await fetch('/books', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, author, user_id })
-      });
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to add book');
+    async function loadRegistrants() {
+      try {
+        const res = await fetch('/registrants');
+        if (!res.ok) throw new Error('Failed to fetch registrants');
+        const names = await res.json();
+        const list = document.getElementById('registrants-list');
+        list.innerHTML = '';
+        names.forEach(name => {
+          const li = document.createElement('li');
+          li.textContent = name;
+          list.appendChild(li);
+        });
+      } catch (err) {
+        alert('Error loading registrants: ' + err.message);
       }
-      await loadBooks();
-    } catch (err) {
-      alert('Error adding book: ' + err.message);
     }
-  };
-</script>
 
+    document.getElementById('register-form').onsubmit = async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      if (!name) return alert('Please enter your name.');
+
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Registration failed');
+        }
+
+        await loadRegistrants();
+        document.getElementById('name').value = '';
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    };
+
+    // Load registrants on page load
+    loadRegistrants();
+  </script>
+</body>
+</html>
