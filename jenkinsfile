@@ -5,12 +5,26 @@ pipeline {
     REGISTRY = "khangeshmatte123"
     BUILD_ID = "${env.BUILD_ID}"
     SONAR_HOST_URL = 'http://108.142.232.37:9000'
+    GIT_REPO_NAME = "Infrastructure_manifest_K8"
+    GIT_USER_NAME = "khangesh9420"
   }
 
   stages {
     stage('Checkout') {
       steps {
         checkout scm
+      }
+    }
+
+    stage('Detect Changes') {
+      steps {
+        script {
+          def changedFiles = sh(script: "git diff --name-only origin/main", returnStdout: true).trim()
+          env.CHANGED_BOOK = changedFiles.contains("book-service/")
+          env.CHANGED_USER = changedFiles.contains("user-service/")
+          echo "Book service changed: ${env.CHANGED_BOOK}"
+          echo "User service changed: ${env.CHANGED_USER}"
+        }
       }
     }
 
@@ -24,10 +38,14 @@ pipeline {
 
     stage('Build Images with Buildah') {
       steps {
-        sh '''
-          buildah bud -t docker.io/$REGISTRY/book-service:$BUILD_ID book-service
-          buildah bud -t docker.io/$REGISTRY/user-service:$BUILD_ID user-service
-        '''
+        script {
+          if (env.CHANGED_BOOK == 'true') {
+            sh "buildah bud -t docker.io/$REGISTRY/book-service:$BUILD_ID book-service"
+          }
+          if (env.CHANGED_USER == 'true') {
+            sh "buildah bud -t docker.io/$REGISTRY/user-service:$BUILD_ID user-service"
+          }
+        }
       }
     }
 
@@ -61,46 +79,54 @@ EOF
 
     stage('Push Images with Buildah') {
       steps {
-        sh '''
-          buildah push docker.io/$REGISTRY/book-service:$BUILD_ID
-          buildah push docker.io/$REGISTRY/user-service:$BUILD_ID
-        '''
+        script {
+          if (env.CHANGED_BOOK == 'true') {
+            sh "buildah push docker.io/$REGISTRY/book-service:$BUILD_ID"
+          }
+          if (env.CHANGED_USER == 'true') {
+            sh "buildah push docker.io/$REGISTRY/user-service:$BUILD_ID"
+          }
+        }
       }
     }
 
     stage('Update Manifests & Push to Git') {
-      environment {
-        GIT_REPO_NAME = "Infrastructure_manifest_K8"
-        GIT_USER_NAME = "khangesh9420"
-      }
       steps {
         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-          sh '''
-            set -e
+          script {
+            sh '''
+              set -e
+              rm -rf $GIT_REPO_NAME
+              git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git
 
-            rm -rf $GIT_REPO_NAME
-            git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git
+              chmod +x update-images.sh
+              BUILD_ID=$BUILD_ID ./update-images.sh $GIT_REPO_NAME
 
-            chmod +x update-images.sh
-            BUILD_ID=$BUILD_ID ./update-images.sh $GIT_REPO_NAME
+              cd $GIT_REPO_NAME
 
-            cd $GIT_REPO_NAME
+              git config user.name "$GIT_USER_NAME"
+              git config user.email "khangeshmatte@gmail.com"
 
-            git config user.name "$GIT_USER_NAME"
-            git config user.email "khangeshmatte@gmail.com"
+              CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD || echo "main")
+              git checkout $CURRENT_BRANCH || git checkout -b $CURRENT_BRANCH
 
-            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD || echo "main")
-            git checkout $CURRENT_BRANCH || git checkout -b $CURRENT_BRANCH
+              # Conditionally add only the updated manifests
+              if [ "$CHANGED_BOOK" = "true" ]; then
+                git add k8s_manifest/book-deployment.yaml
+              fi
 
-            git add k8s_manifest/book-deployment.yaml k8s_manifest/user-deployment.yaml
+              if [ "$CHANGED_USER" = "true" ]; then
+                git add k8s_manifest/user-deployment.yaml
+              fi
 
-            if ! git diff --cached --quiet; then
-              git commit -m "ci: update image tags to $BUILD_ID"
-              git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git $CURRENT_BRANCH
-            else
-              echo "No changes to commit"
-            fi
-          '''
+              if ! git diff --cached --quiet; then
+                git commit -m "ci: update image tags to $BUILD_ID"
+                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git $CURRENT_BRANCH
+              else
+                echo "No changes to commit"
+              fi
+            '''
+          }
         }
       }
     }
