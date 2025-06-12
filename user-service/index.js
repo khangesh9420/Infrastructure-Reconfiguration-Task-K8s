@@ -20,7 +20,19 @@ app.get('/users/:id', (req, res) => {
 });
 
 app.post('/users', (req, res) => {
-  users.push(req.body);
+  const { id, name } = req.body;
+
+  if (typeof id !== 'number' || !name) {
+    return res.status(400).json({ error: 'Invalid user data' });
+  }
+
+  // Check for duplicates
+  const exists = users.some(u => u.id === id);
+  if (exists) {
+    return res.status(409).json({ error: 'User already exists' });
+  }
+
+  users.push({ id, name });
   res.status(201).json({ message: 'User added' });
 });
 
