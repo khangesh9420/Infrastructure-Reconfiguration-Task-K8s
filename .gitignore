@@ -1,0 +1,29 @@
+# Terraform state files
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Backup and crash logs
+*.backup
+*.log
+
+# Terraform plan output
+*.tfplan
+
+# Ignore variable definition files with secrets
+terraform.tfvars
+*.tfvars
+
+# Ignore Terraform override files
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Local .terraform working directory
+.terraform/
+
+# .terraform.lock.hcl can be committed, but ignore if you want to avoid lock conflicts
+# Uncomment below line only if you're intentionally not tracking the lock file
+# .terraform.
+
