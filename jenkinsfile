@@ -7,6 +7,22 @@ pipeline {
   }
 
   stages {
+    stage('Check Relevant Changes') {
+      steps {
+        script {
+          def changes = sh(script: "git diff --name-only origin/main", returnStdout: true).trim().split('\n')
+          def matched = changes.any { file ->
+            file == 'Jenkinsfile' || file.startsWith('book-service/') || file.startsWith('user-service/')
+          }
+          if (!matched) {
+            echo "No relevant changes. Skipping build."
+            currentBuild.result = 'NOT_BUILT'
+            error("Build skipped.")
+          }
+        }
+      }
+    }
+
     stage('Checkout') {
       steps {
         checkout scm
@@ -30,37 +46,29 @@ pipeline {
       }
     }
 
-    stage('SonarQube Scan: book-service') {
+    stage('SonarQube Scan') {
       environment {
-        SONAR_HOST_URL = 'http://108.142.232.37:9000' // updated to your VM's public IP
+        SONAR_HOST_URL = 'http://108.142.232.37:9000'
       }
       steps {
-        dir('book-service') {
-          withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-            sh '''
-              echo "Running SonarQube analysis for book-service"
+        withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+          sh '''
+            buildah from --name sonar-cli docker.io/sonarsource/sonar-scanner-cli
 
-              buildah from --name sonar-cli docker.io/sonarsource/sonar-scanner-cli
+            buildah unshare bash -c '
+              mount_path=$(buildah mount sonar-cli)
+              cp -r . $mount_path/usr/src
+              cat <<EOF > $mount_path/usr/src/sonar-project.properties
+sonar.projectKey=infrastructure-repo
+sonar.sources=.
+sonar.host.url=$SONAR_HOST_URL
+sonar.login=$SONAR_TOKEN
+EOF
+              buildah run sonar-cli sonar-scanner -Dproject.settings=/usr/src/sonar-project.properties
+            '
 
-              buildah unshare bash -c '
-                mount_path=$(buildah mount sonar-cli)
-
-                # Copy project source to container mount
-                cp -r . $mount_path/usr/src
-
-                # Create SonarQube config inside mount
-                echo "sonar.projectKey=book-service" > $mount_path/usr/src/sonar-project.properties
-                echo "sonar.sources=." >> $mount_path/usr/src/sonar-project.properties
-                echo "sonar.host.url=$SONAR_HOST_URL" >> $mount_path/usr/src/sonar-project.properties
-                echo "sonar.login=$SONAR_TOKEN" >> $mount_path/usr/src/sonar-project.properties
-
-                # Run scanner inside container
-                buildah run sonar-cli sonar-scanner -Dproject.settings=/usr/src/sonar-project.properties
-              '
-
-              buildah rm sonar-cli
-            '''
-          }
+            buildah rm sonar-cli
+          '''
         }
       }
     }
@@ -94,15 +102,11 @@ pipeline {
               git checkout $CURRENT_BRANCH
             fi
 
-            echo "On branch: $CURRENT_BRANCH"
-
             git add k8s_manifest/book-deployment.yaml k8s_manifest/user-deployment.yaml
 
             if ! git diff --cached --quiet; then
               git commit -m "ci: update image tags to $BUILD_ID"
               git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git $CURRENT_BRANCH
-            else
-              echo "No changes to commit"
             fi
           '''
         }
