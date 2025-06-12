@@ -13,7 +13,7 @@ echo "Updating image tags to tag: $TAG"
 
 # Check files exist
 if [[ ! -f "$BOOK_FILE" || ! -f "$USER_FILE" ]]; then
-  echo "❌ One of the manifest files is missing"
+  echo "One of the manifest files is missing"
   exit 1
 fi
 
@@ -21,7 +21,6 @@ echo "Before:"
 grep 'image:' "$BOOK_FILE"
 grep 'image:' "$USER_FILE"
 
-# Do the replacement
 sed -i "s|docker.io/$REGISTRY/book-service:[^[:space:]]*|docker.io/$REGISTRY/book-service:$TAG|" "$BOOK_FILE"
 sed -i "s|docker.io/$REGISTRY/user-service:[^[:space:]]*|docker.io/$REGISTRY/user-service:$TAG|" "$USER_FILE"
 
@@ -29,4 +28,4 @@ echo "After:"
 grep 'image:' "$BOOK_FILE"
 grep 'image:' "$USER_FILE"
 
-echo "✅ Image tags updated."
+echo "Image tags updated."
