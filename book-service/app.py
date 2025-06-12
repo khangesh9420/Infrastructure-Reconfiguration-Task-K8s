@@ -4,6 +4,8 @@ import requests
 app = Flask(__name__)
 books = []
 
+USER_SERVICE_URL = 'http://user-service'  # Kubernetes service name, port 80 by default
+
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')
@@ -19,7 +21,7 @@ def add_book():
 
     # Validate user exists in user-service
     try:
-        response = requests.get(f'http://user-service.default.svc.cluster.local:5001/users/{user_id}')
+        response = requests.get(f'{USER_SERVICE_URL}/users/{user_id}')
         if response.status_code != 200:
             return jsonify({'error': 'User not found'}), 404
     except requests.exceptions.RequestException:
@@ -27,6 +29,23 @@ def add_book():
 
     books.append(data)
     return jsonify({'message': 'Book added'}), 201
+
+# ✅ Proxy frontend requests to user-service
+@app.route('/users', methods=['GET'])
+def get_users():
+    try:
+        response = requests.get(f'{USER_SERVICE_URL}/users')
+        return jsonify(response.json())
+    except requests.exceptions.RequestException:
+        return jsonify({'error': 'User service unreachable'}), 503
+
+@app.route('/users', methods=['POST'])
+def add_user():
+    try:
+        response = requests.post(f'{USER_SERVICE_URL}/users', json=request.json)
+        return jsonify({'message': 'User added'}), 201
+    except requests.exceptions.RequestException:
+        return jsonify({'error': 'User service unreachable'}), 503
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
