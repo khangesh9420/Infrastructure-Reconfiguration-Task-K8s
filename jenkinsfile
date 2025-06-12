@@ -14,32 +14,6 @@ pipeline {
       }
     }
 
-    stage('Check Relevant Changes') {
-      steps {
-        script {
-          def changes = []
-          try {
-            changes = sh(script: "git diff --name-only HEAD~1 HEAD", returnStdout: true).trim().split('\n')
-          } catch (err) {
-            echo "Diff failed or first commit – running pipeline anyway."
-            changes = ['jenkinsfile']
-          }
-
-          def shouldBuild = changes.any { file ->
-            file == 'jenkinsfile' || file.startsWith('book-service/') || file.startsWith('user-service/')
-          }
-
-          if (!shouldBuild) {
-            echo "No relevant changes. Skipping build."
-            currentBuild.result = 'NOT_BUILT'
-            error("Build skipped.")
-          } else {
-            echo "Relevant changes detected: ${changes}"
-          }
-        }
-      }
-    }
-
     stage('Login to Docker Hub (Buildah)') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
