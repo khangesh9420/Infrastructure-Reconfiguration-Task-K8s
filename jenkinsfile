@@ -76,17 +76,21 @@ EOF
       steps {
         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
           sh '''
+            set -e
+
+            rm -rf $GIT_REPO_NAME
+            git clone https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git
+
             chmod +x update-images.sh
-            ./update-images.sh
+            BUILD_ID=$BUILD_ID ./update-images.sh $GIT_REPO_NAME
 
-            git config --global user.name "$GIT_USER_NAME"
-            git config --global user.email "khangeshmatte@gmail.com"
+            cd $GIT_REPO_NAME
 
-            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-            if [ "$CURRENT_BRANCH" = "HEAD" ] || [ -z "$CURRENT_BRANCH" ]; then
-              CURRENT_BRANCH="main"
-              git checkout $CURRENT_BRANCH
-            fi
+            git config user.name "$GIT_USER_NAME"
+            git config user.email "khangeshmatte@gmail.com"
+
+            CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD || echo "main")
+            git checkout $CURRENT_BRANCH || git checkout -b $CURRENT_BRANCH
 
             git add k8s_manifest/book-deployment.yaml k8s_manifest/user-deployment.yaml
 
