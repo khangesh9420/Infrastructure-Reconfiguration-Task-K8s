@@ -70,7 +70,7 @@ EOF
 
     stage('Update Manifests & Push to Git') {
       environment {
-        GIT_REPO_NAME = "Infrastructure-Reconfiguration-Task-K8s"
+        GIT_REPO_NAME = "Infrastructure_manifest_K8"
         GIT_USER_NAME = "khangesh9420"
       }
       steps {
