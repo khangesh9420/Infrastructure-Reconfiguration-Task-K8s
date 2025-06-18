@@ -1,4 +1,4 @@
-
+![diagram-export-6-11-2025-10_05_33-PM](https://github.com/user-attachments/assets/7177e358-d945-4dc2-b8d1-819386568bfd)
 # 🚀 CI/CD Modernization with Terraform, AKS, Helm, ArgoCD, Buildah & Docker
 
 This project transforms a legacy Azure VM–based Jenkins pipeline into a fully cloud-native, secure, scalable CI/CD platform.
@@ -198,5 +198,3 @@ argocd app sync my-app
 ## 🤝 Let's Connect
 
 This repo is part of my personal DevOps transformation journey. Fork, adapt, or reach out on [LinkedIn](https://www.linkedin.com/in/khangesh9420/)!
-
-![diagram-export-6-11-2025-10_05_33-PM](https://github.com/user-attachments/assets/7177e358-d945-4dc2-b8d1-819386568bfd)
