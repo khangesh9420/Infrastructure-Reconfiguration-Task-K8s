@@ -198,3 +198,26 @@ argocd app sync my-app
 ## 🤝 Let's Connect
 
 This repo is part of my personal DevOps transformation journey. Fork, adapt, or reach out on [LinkedIn](https://www.linkedin.com/in/khangesh9420/)!
+
+## Project Images
+1. <img width="1092" alt="image" src="https://github.com/user-attachments/assets/e9c1800c-2a18-4671-aff7-c51b5c81c17f" />
+2.<img width="807" alt="image" src="https://github.com/user-attachments/assets/1b600646-578d-4796-8ee9-3d7bc4a299ff" />
+3.<img width="774" alt="image" src="https://github.com/user-attachments/assets/48bebb05-8e32-4ff2-aa8d-dd7dddcc3145" />
+4.<img width="796" alt="image" src="https://github.com/user-attachments/assets/f37f6c58-4ddc-4e1f-af96-8f4a60faf6a7" />
+5.<img width="1034" alt="sonarqube" src="https://github.com/user-attachments/assets/56f4f461-6ef7-4a45-b4d7-0d8e48df11bc" />
+6.<img width="1259" alt="docker" src="https://github.com/user-attachments/assets/9120f3e1-2e77-4e97-adde-432110cb2ebe" />
+7.<img width="1262" alt="argo-cd-deployment" src="https://github.com/user-attachments/assets/6b3054b6-4506-4b19-99cb-406d45e644fe" />
+8.<img width="796" alt="image" src="https://github.com/user-attachments/assets/9702105c-3677-48f4-8e42-36d8b65db3de" />
+9.<img width="782" alt="image" src="https://github.com/user-attachments/assets/1872575d-0d74-4ee9-bb7d-9d71e2fd9be0" />
+10.<img width="704" alt="image" src="https://github.com/user-attachments/assets/68d09fc3-fd18-4591-9eb9-747c338589d7" />
+
+
+
+
+
+
+
+
+
+
+
