@@ -206,12 +206,9 @@ This repo is part of my personal DevOps transformation journey. Fork, adapt, or 
 4.<img width="796" alt="image" src="https://github.com/user-attachments/assets/f37f6c58-4ddc-4e1f-af96-8f4a60faf6a7" />
 5.<img width="1040" height="251" alt="image" src="https://github.com/user-attachments/assets/fa937f23-c08b-4e46-bccf-92570fbb9901" />
 6.<img width="1031" height="224" alt="image" src="https://github.com/user-attachments/assets/7a893ba0-b6b2-473f-a819-7c2c9fb1a52d" />
-
-7.<img width="1262" alt="argo-cd-deployment" src="https://github.com/user-attachments/assets/6b3054b6-4506-4b19-99cb-406d45e644fe" />
-8.<img width="826" height="422" alt="image" src="https://github.com/user-attachments/assets/e2b06718-2495-4a66-bf5c-f08c95315373" />
-
-9.<img width="782" alt="image" src="https://github.com/user-attachments/assets/1872575d-0d74-4ee9-bb7d-9d71e2fd9be0" />
-10.<img width="704" alt="image" src="https://github.com/user-attachments/assets/68d09fc3-fd18-4591-9eb9-747c338589d7" />
+7.<img width="826" height="422" alt="image" src="https://github.com/user-attachments/assets/e2b06718-2495-4a66-bf5c-f08c95315373" />
+8.<img width="782" alt="image" src="https://github.com/user-attachments/assets/1872575d-0d74-4ee9-bb7d-9d71e2fd9be0" />
+9.<img width="704" alt="image" src="https://github.com/user-attachments/assets/68d09fc3-fd18-4591-9eb9-747c338589d7" />
 
 
 
